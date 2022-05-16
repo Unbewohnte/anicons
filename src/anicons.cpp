@@ -82,19 +82,10 @@ class Chunk {
 
         return 0;
     };
-
-    // prints chunk header
-    // void print_header() {
-    //     std::cout
-    //     << "| fourcc: " << fourcc << std::endl
-    //     << "| size: " << size << std::endl
-    //     << "| data start pos: " << data_start_pos << std::endl
-    //     << "| data end pos: " << data_end_pos << std::endl;
-    // };
 };
 
 void print_help() {
-    std::cout << "anicons [FILEPATH]" << std::endl;
+    std::cout << "anicons v0.1.1\nhelp: anicons [FILEPATH]" << std::endl;
 };
 
 int main(int argc, char* argv[]) {
@@ -103,14 +94,24 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    std::string filename = argv[1];
+    std::string filepath = argv[1];
     
     // open file
-    std::fstream riff_file(filename, std::ios::in | std::ios::binary);
+    std::fstream riff_file(filepath, std::ios::in | std::ios::binary);
     if (!riff_file.is_open()) {
-        std::cout << "Could not open \"" << filename << "\""  << std::endl;
+        std::cout << "Could not open \"" << filepath << "\""  << std::endl;
         return 1;
     };
+
+    std::string filename = "";
+    std::string parent_dir = "";
+    auto pos = filepath.find_last_of("/\\");
+    if (pos != std::string::npos) {
+        parent_dir = filepath.substr(0, pos);
+        filename = filepath.substr(pos, filepath.length());
+    } else {
+        filename = filepath;
+    }
 
     // try to read RIFF chunk
     Chunk riff_chunk;
@@ -132,7 +133,16 @@ int main(int argc, char* argv[]) {
             char buf[ch.size];
             ch.read_contents(&riff_file, buf);
 
-            std::fstream icon_file(std::to_string(ico_counter) + ".ico", std::ios::out | std::ios::binary);
+            std::fstream icon_file;
+            if (parent_dir != "") {
+                icon_file = std::fstream(
+                    parent_dir + filename + "-" + std::to_string(ico_counter) + ".ico",
+                     std::ios::out | std::ios::binary);
+            } else {
+                icon_file = std::fstream(
+                    filename + "-" + std::to_string(ico_counter) + ".ico",
+                     std::ios::out | std::ios::binary);
+            }
             icon_file.write(buf, ch.size);
             icon_file.close();
 
